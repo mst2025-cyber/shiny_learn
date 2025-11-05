@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>順列と組み合わせ - インタラクティブガイド</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Calm Harmony (Warm Neutrals) -->
+    <!-- Application Structure Plan: 「コンセプト解説＆インタラクティブ計算機」SPA。構成：[1]ヘッダー [2]イントロ（核心的差異） [3]並列比較（定義、キーワード、公式を2カラムで） [4]インタラクティブ計算機（nとkを入力） [5]計算結果の動的表示（PとCの値、および比較棒グラフ） [6]視覚的デモ（計算機と連動し、PとCの実際のパターン例を生成・表示） [7]まとめの比較表。この構造は、静的な定義の学習から、動的な計算、そして視覚的な確認へとユーザーを導く「学習フロー」を意図している。静的なレポートをなぞるのではなく、比較とインタラクティブな体験を通じて「なぜ数が異なるのか」を理解させることを最優先した設計である。 -->
+    <!-- Visualization & Content Choices: 
+        1. [情報] PとCの定義/キーワード: [ゴール] 比較/理解: [手法] 2カラムのTailwindグリッドレイアウト: [インタラクション] 並列配置による視覚的な比較: [正当性] レポートの上下構造よりも直接的な比較が可能: [ライブラリ] HTML/Tailwind
+        2. [情報] P(n,k)とC(n,k)の計算: [ゴール] 数量的差異の理解: [手法] ユーザー入力(n, k)に基づくJS計算機と、Chart.jsによる動的棒グラフ: [インタラクション] ユーザーがn,kを変更し計算実行。数値結果とグラフが即時更新される: [正当性] 静的な例(5,3)を超え、n,kの変化が結果にどう影響するかを動的に探求できる。グラフは規模感の差を視覚的に強調する: [ライブラリ] Vanilla JS, Chart.js (Canvas)
+        3. [情報] 「順序」の有無によるパターンの違い: [ゴール] 概念的差異の視覚的理解: [手法] 計算機と連動する「パターン生成」エリア: [インタラクション] 計算実行時、JSがPとCのパターン例（nが小さい場合は全件）を生成し、HTMLのdiv内に動的に描画する: [正当性] なぜPがCより多いのか（例: (A,B)と(B,A)がPでは別、Cでは同じ）を文字通り「見せる」ことで、本質的な理解を促す: [ライブラリ] Vanilla JS (HTML/CSS描画)
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #fdfcfb;
+            color: #333;
+        }
+        .calc-input {
+            width: 100px;
+            text-align: center;
+            font-size: 1.25rem;
+            margin: 0 0.5rem;
+            border: 2px solid #ddd;
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+        }
+        .pattern-box {
+            font-family: monospace;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            word-break: break-all;
+        }
+        .pattern-item {
+            display: inline-block;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            margin: 0.25rem;
+            font-size: 0.875rem;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-slate-700">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
+
+        <header class="text-center my-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-indigo-600">順列と組み合わせ</h1>
+            <p class="text-xl mt-2 text-slate-600">インタラクティブ・ガイド</p>
+        </header>
+
+        <section id="intro" class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-2xl font-bold mb-3 text-indigo-700">ようこそ！</h2>
+            <p class="text-lg">「順列」と「組み合わせ」は、どちらも「場合の数」を数える方法ですが、たった一つの、しかし決定的な違いがあります。それは「<strong class="text-red-600">選んだものの順序を考慮するかどうか</strong>」です。このアプリは、その違いを定義、計算、そして視覚的なデモを通じてインタラクティブに探求するためのツールです。</p>
+        </section>
+
+        <section id="comparison" class="mb-8">
+            <h2 class="text-3xl font-bold text-center mb-6 text-slate-800">基本の比較</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <div class="bg-white p-6 rounded-lg shadow-lg border-t-4 border-blue-500">
+                    <h3 class="text-3xl font-bold mb-4 text-blue-600">順列 (Permutation)</h3>
+                    <p class="text-xl mb-4">異なる $n$ 個から $k$ 個を選び、<strong class="text-red-600">順序をつけて並べた</strong>総数。</p>
+                    <div class="mb-4">
+                        <span class="font-bold text-lg">キーワード:</span>
+                        <span class="inline-block bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm font-semibold mr-2 mt-2">並べる</span>
+                        <span class="inline-block bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm font-semibold mr-2 mt-2">整列させる</span>
+                        <span class="inline-block bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm font-semibold mr-2 mt-2">区別する</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-lg">公式:</span>
+                        <p class="text-lg font-mono bg-slate-50 p-3 rounded-md mt-2">
+                            $P(n, k) = \frac{n!}{(n-k)!}$
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-lg border-t-4 border-green-500">
+                    <h3 class="text-3xl font-bold mb-4 text-green-600">組み合わせ (Combination)</h3>
+                    <p class="text-xl mb-4">異なる $n$ 個から $k$ 個を、<strong class="text-red-600">順序を考慮せず選んだ</strong>総数。</p>
+                    <div class="mb-4">
+                        <span class="font-bold text-lg">キーワード:</span>
+                        <span class="inline-block bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm font-semibold mr-2 mt-2">選ぶだけ</span>
+                        <span class="inline-block bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm font-semibold mr-2 mt-2">グループを作る</span>
+                        <span class="inline-block bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm font-semibold mr-2 mt-2">区別しない</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-lg">公式:</span>
+                        <p class="text-lg font-mono bg-slate-50 p-3 rounded-md mt-2">
+                            $C(n, k) = \frac{n!}{k!(n-k)!}$
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="calculator" class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-3xl font-bold text-center mb-6 text-indigo-700">インタラクティブ計算機</h2>
+            <div class="flex flex-col items-center justify-center text-xl md:text-2xl">
+                <div class="flex items-center mb-4">
+                    異なる
+                    <input type="number" id="n_input" class="calc-input" value="5" min="1" max="15">
+                    個のものから
+                </div>
+                <div class="flex items-center mb-6">
+                    <input type="number" id="k_input" class="calc-input" value="3" min="1" max="15">
+                    個を選ぶ
+                </div>
+                <button id="calculate_btn" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg text-xl hover:bg-indigo-700 transition duration-300 shadow-lg">
+                    計算する
+                </button>
+            </div>
+        </section>
+
+        <section id="results" class="mb-8 hidden">
+            <h2 class="text-3xl font-bold text-center mb-6 text-slate-800">計算結果と視覚デモ</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-blue-600">順列 $P(<span class="n_val">5</span>, <span class="k_val">3</span>)$ の場合</h3>
+                    <p class="text-4xl font-bold text-blue-700 mb-4" id="p_result"></p>
+                    <p class="text-lg mb-4">「(A,B,C)と(A,C,B)は別物」として数えます。</p>
+                    <h4 class="text-xl font-bold mb-2">パターン例 (<span id="p_count">0</span>件中、最大<span id="p_limit">0</span>件):</h4>
+                    <div id="p_viz_output" class="pattern-box"></div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-green-600">組み合わせ $C(<span class="n_val">5</span>, <span class="k_val">3</span>)$ の場合</h3>
+                    <p class="text-4xl font-bold text-green-700 mb-4" id="c_result"></p>
+                    <p class="text-lg mb-4">「{A,B,C}と{A,C,B}は同じ」として数えます。</p>
+                    <h4 class="text-xl font-bold mb-2">パターン例 (<span id="c_count">0</span>件):</h4>
+                    <div id="c_viz_output" class="pattern-box"></div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h3 class="text-2xl font-bold text-center mb-4 text-slate-800">総数の比較グラフ</h3>
+                <p class="text-center text-lg mb-4">入力された $n$ と $k$ の値に基づき、順列と組み合わせの総数を比較します。スケールの違いに注目してください。</p>
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="summary-table" class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-3xl font-bold text-center mb-6 text-slate-800">まとめ</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-max text-lg text-left">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th class="p-4 font-bold">項目</th>
+                            <th class="p-4 font-bold text-blue-600">順列 (Permutation)</th>
+                            <th class="p-4 font-bold text-green-600">組み合わせ (Combination)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-4 font-bold">順序</td>
+                            <td class="p-4 text-red-600 font-bold">考慮する (区別する)</td>
+                            <td class="p-4 text-red-600 font-bold">考慮しない (区別しない)</td>
+                        </tr>
+                        <tr class="border-b bg-slate-50">
+                            <td class="p-4 font-bold">例</td>
+                            <td class="p-4">リレーの走順、役職（会長・副会長）</td>
+                            <td class="p-4">委員、グループ分け、トランプの手札</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-4 font-bold">(A, B, C)と(A, C, B)</td>
+                            <td class="p-4">別のもの (2通り)</td>
+                            <td class="p-4">同じもの (1通り)</td>
+                        </tr>
+                        <tr class="bg-slate-50">
+                            <td class="p-4 font-bold">計算式</td>
+                            <td class="p-4 font-mono">$P(n, k) = \frac{n!}{(n-k)!}$</td>
+                            <td class="p-4 font-mono">$C(n, k) = \frac{n!}{k!(n-k)!}$</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="text-center p-4 text-slate-500">
+        <p>© 2025 インタラクティブ学習ガイド</p>
+    </footer>
+
+    <script>
+        let myChart;
+        const ctx = document.getElementById('comparisonChart').getContext('2d');
+        const MAX_VIZ_ITEMS = 50;
+
+        function initializeChart() {
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['順列 (P)', '組み合わせ (C)'],
+                    datasets: [{
+                        label: '総数',
+                        data: [0, 0],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.6)',
+                            'rgba(16, 185, 129, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(16, 185, 129, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1e6) return value / 1e6 + "M";
+                                    if (value >= 1e3) return value / 1e3 + "k";
+                                    return value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.formattedValue;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart(pValue, cValue) {
+            myChart.data.datasets[0].data = [pValue, cValue];
+            myChart.update();
+        }
+
+        function factorial(n) {
+            if (n < 0) return NaN;
+            if (n === 0) return 1;
+            let result = 1n;
+            for (let i = 2n; i <= n; i++) {
+                result *= i;
+            }
+            return result;
+        }
+
+        function permutations(n, k) {
+            if (n < k || n < 0 || k < 0) return 0n;
+            if (k === 0) return 1n;
+            let result = 1n;
+            for (let i = 0n; i < k; i++) {
+                result *= (BigInt(n) - i);
+            }
+            return result;
+        }
+
+        function combinations(n, k) {
+            if (n < k || n < 0 || k < 0) return 0n;
+            if (k === 0 || k === n) return 1n;
+            if (k > n / 2) k = n - k;
+            let result = 1n;
+            for (let i = 1n; i <= k; i++) {
+                result = result * (BigInt(n) - i + 1n) / i;
+            }
+            return result;
+        }
+
+        function getPermutations(arr, k) {
+            const results = [];
+            if (k === 1) return arr.map(item => [item]);
+
+            arr.forEach((item, index) => {
+                const rest = [...arr.slice(0, index), ...arr.slice(index + 1)];
+                const perms = getPermutations(rest, k - 1);
+                perms.forEach(perm => {
+                    results.push([item, ...perm]);
+                });
+            });
+            return results;
+        }
+
+        function getCombinations(arr, k) {
+            const results = [];
+            if (k === 1) return arr.map(item => [item]);
+
+            arr.forEach((item, index) => {
+                const rest = arr.slice(index + 1);
+                if (rest.length >= k - 1) {
+                    const combs = getCombinations(rest, k - 1);
+                    combs.forEach(comb => {
+                        results.push([item, ...comb]);
+                    });
+                }
+            });
+            return results;
+        }
+
+        function renderPatterns(elements, isPermutation) {
+            return elements.map(el => {
+                const content = isPermutation ? `(${el.join(', ')})` : `{${el.join(', ')}}`;
+                return `<span class="pattern-item">${content}</span>`;
+            }).join(' ');
+        }
+
+        function handleCalculate() {
+            const nInput = document.getElementById('n_input');
+            const kInput = document.getElementById('k_input');
+            let n = parseInt(nInput.value);
+            let k = parseInt(kInput.value);
+
+            if (isNaN(n) || isNaN(k) || n < 1 || k < 1) {
+                alert("n と k には1以上の数値を入力してください。");
+                return;
+            }
+
+            if (k > n) {
+                alert("k は n 以下の数値である必要があります。");
+                k = n;
+                kInput.value = n;
+            }
+
+            if (n > 15) {
+                alert("計算負荷のため、n は 15 以下に制限されています。");
+                n = 15;
+                nInput.value = 15;
+            }
+
+            const pValue = permutations(n, k);
+            const cValue = combinations(n, k);
+
+            document.getElementById('results').classList.remove('hidden');
+            document.querySelectorAll('.n_val').forEach(el => el.textContent = n);
+            document.querySelectorAll('.k_val').forEach(el => el.textContent = k);
+
+            document.getElementById('p_result').textContent = pValue.toLocaleString();
+            document.getElementById('c_result').textContent = cValue.toLocaleString();
+
+            const pVizOutput = document.getElementById('p_viz_output');
+            const cVizOutput = document.getElementById('c_viz_output');
+            const pCountEl = document.getElementById('p_count');
+            const cCountEl = document.getElementById('c_count');
+            const pLimitEl = document.getElementById('p_limit');
+
+            const elements = Array.from({ length: n }, (_, i) => String.fromCharCode(65 + i)); // [A, B, C, ...]
+
+            let pPatterns = [];
+            if (pValue <= MAX_VIZ_ITEMS) {
+                pPatterns = getPermutations(elements, k);
+                pLimitEl.textContent = pValue;
+            } else if (n <= 10) { 
+                pPatterns = getPermutations(elements, k).slice(0, MAX_VIZ_ITEMS);
+                pLimitEl.textContent = MAX_VIZ_ITEMS;
+            } else {
+                pLimitEl.textContent = MAX_VIZ_ITEMS;
+            }
+            pCountEl.textContent = pValue.toLocaleString();
+            pVizOutput.innerHTML = pPatterns.length > 0 ? renderPatterns(pPatterns, true) : '（数が多すぎるため、パターンの生成を省略します）';
+
+            let cPatterns = [];
+            if (cValue <= MAX_VIZ_ITEMS) {
+                cPatterns = getCombinations(elements, k);
+            } else if (n <= 15) { 
+                cPatterns = getCombinations(elements, k).slice(0, MAX_VIZ_ITEMS);
+            }
+            cCountEl.textContent = cValue.toLocaleString();
+            cVizOutput.innerHTML = cPatterns.length > 0 ? renderPatterns(cPatterns, false) : '（数が多すぎるため、パターンの生成を省略します）';
+            
+            updateChart(Number(pValue), Number(cValue));
+        }
+
+        document.getElementById('calculate_btn').addEventListener('click', handleCalculate);
+        
+        window.onload = () => {
+            initializeChart();
+            handleCalculate();
+        };
+
+    </script>
+</body>
+</html>
