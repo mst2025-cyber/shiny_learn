@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>サンプル index.html — 5つのリンク</title>
+  <style>
+    :root{--bg:#f7f9fc;--card:#fff;--accent:#4f46e5;--muted:#6b7280}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Hiragino Kaku Gothic ProN',Meiryo,Arial; background:var(--bg); margin:0; color:#111}
+    header{background:linear-gradient(90deg,#eef2ff,#fff);padding:18px 24px;box-shadow:0 1px 0 rgba(0,0,0,.04)}
+    .container{max-width:980px;margin:0 auto}
+    nav{display:flex;gap:12px;align-items:center}
+    a.logo{font-weight:700;color:var(--accent);text-decoration:none}
+    .links{margin-left:auto;display:flex;gap:10px}
+    .links a{padding:8px 12px;border-radius:8px;text-decoration:none;color:var(--accent);font-weight:600}
+    main{padding:28px 24px}
+    .card{background:var(--card);padding:20px;border-radius:12px;box-shadow:0 6px 18px rgba(16,24,40,.06);margin-bottom:18px}
+    section{padding:36px 0}
+    h1,h2{margin:0 0 12px}
+    p{margin:0 0 10px;color:var(--muted)}
+    footer{padding:18px 24px;text-align:center;color:var(--muted);font-size:14px}
+    .btn{display:inline-block;padding:8px 14px;border-radius:999px;background:transparent;border:2px solid var(--accent);color:var(--accent);text-decoration:none;font-weight:700}
+    @media (max-width:640px){.links{display:none}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container" style="display:flex;align-items:center">
+      <a href="#home" class="logo">ShinySample</a>
+      <nav class="links">
+        <!-- 5つのリンク：Home, About, Services, Blog, Contact -->
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#services">Services</a>
+        <a href="#blog">Blog</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="home" class="card">
+      <h1>ようこそ — サンプルページ</h1>
+      <p>このページには5か所のリンク（ナビゲーション）があります。各リンクはページ内の該当セクションへスクロールします。</p>
+      <p>外部リンクの例も下に用意しています。</p>
+      <p style="margin-top:12px"><a class="btn" href="https://example.com" target="_blank" rel="noopener noreferrer">外部リンク例（example.com）</a></p>
+    </section>
+
+    <section id="about" class="card">
+      <h2>About</h2>
+      <p>このセクションではウェブページの簡単な説明を書きます。テキストはダミーです。</p>
+    </section>
+
+    <section id="services" class="card">
+      <h2>Services</h2>
+      <p>提供するサービスの一覧や特徴をここにまとめます。</p>
+      <ul>
+        <li>サービス A</li>
+        <li>サービス B</li>
+        <li>サービス C</li>
+      </ul>
+    </section>
+
+    <section id="blog" class="card">
+      <h2>Blog</h2>
+      <p>最新の記事や更新情報を表示するためのセクションです。</p>
+      <p>ブログ記事へのリンクをいくつか置いておく実装例：</p>
+      <ol>
+        <li><a href="#blog" onclick="alert('デモ用のモーダル動作');return false;">記事タイトルのダミーリンク</a></li>
+        <li><a href="https://developer.mozilla.org/" target="_blank" rel="noopener noreferrer">MDN Web Docs（外部）</a></li>
+      </ol>
+    </section>
+
+    <section id="contact" class="card">
+      <h2>Contact</h2>
+      <p>連絡先フォームやメールアドレスをここに置きます（このサンプルではダミーです）。</p>
+      <p>Email: <a href="mailto:hello@example.com">hello@example.com</a></p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">© 2025 ShinySample — これはサンプルの index.html です</div>
+  </footer>
+
+  <script>
+    // スムーススクロール（ブラウザの既定の動作を利用する簡易実装）
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+      link.addEventListener('click', e => {
+        const targetId = link.getAttribute('href').slice(1);
+        if(!targetId) return;
+        const el = document.getElementById(targetId);
+        if(!el) return;
+        e.preventDefault();
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>副業月5万円アイデアラウンジ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Calm Harmony Neutrals -->
+    <!-- Application Structure Plan: このSPAは、ユーザーが「副業月5万円」の多様なアイデアを専門分野別に探索・比較できるよう設計されている。構造は「1. 概要ダッシュボード（チャートと主要指標）」、「2. アイデア探索グリッド（フィルター可能なカード）」、「3. 視点別クロス分析（選択したアイデアへの専門家コメント）」の3部構成。専門分野別フィルター（ナビゲーション）を中核に据え、ユーザーが直感的に視点を切り替えながら、概要から詳細へとドリルダウンできるユーザーフローを採用した。これにより、単なるリストではなく、多角的な理解と発見を促す体験を提供する。 -->
+    <!-- Visualization & Content Choices: [分野別アイデア数 -> 概要把握 -> ドーナツチャート (Chart.js) -> クリックでフィルター連動。専門分野の多様性を示し、探索の起点とする。] | [アイデア詳細 -> 比較・探索 -> HTML/Tailwindカードグリッド (JSフィルター) -> クリックで詳細（クロス分析）へ連動。難易度やスキルを視覚的に提示。] | [専門家別視点 -> 多角分析 -> HTMLタブ切り替え (JS) -> アイデアに対する多様な意見（メリット、リスク、ヒント）を提示。] | [主要指標 -> 状況把握 -> HTML/Tailwindキーメトリクス -> 全体のアイデア数や平均難易度を提示。] -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Noto Sans JP', 'Inter', sans-serif;
+            background-color: #fdfcf9; /* Warm Neutral Background */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 640px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-tab {
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        .nav-tab.active {
+            border-bottom-color: #059669; /* Accent Green */
+            color: #065f46;
+            font-weight: 600;
+        }
+        .nav-tab:hover {
+            background-color: #f0fdf4;
+        }
+        .idea-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .idea-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .difficulty-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        .difficulty-1 { background-color: #4ade80; }
+        .difficulty-2 { background-color: #a3e635; }
+        .difficulty-3 { background-color: #facc15; }
+        .difficulty-4 { background-color: #fb923c; }
+        .difficulty-5 { background-color: #f87171; }
+
+        .expert-comment-tab.active {
+            background-color: #ffffff;
+            border-color: #d1d5db;
+            border-bottom-color: #ffffff;
+            margin-bottom: -1px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <h1 class="text-2xl sm:text-3xl font-bold text-center text-green-800">
+                副業月5万円アイデアラウンジ
+            </h1>
+            <p class="text-center text-gray-600 mt-1">専門家の視点から具体的なアイデアを探る</p>
+        </div>
+    </header>
+
+    <nav class="bg-white border-b border-gray-200 sticky top-[84px] sm:top-[92px] z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div id="nav-tabs" class="flex flex-wrap justify-center -mb-px">
+                <button data-category="すべて" class="nav-tab active text-sm sm:text-base px-3 py-3 sm:px-4 sm:py-4 font-medium text-gray-600">すべて</button>
+                <button data-category="クリエイティブ" class="nav-tab text-sm sm:text-base px-3 py-3 sm:px-4 sm:py-4 font-medium text-gray-600">クリエイティブ</button>
+                <button data-category="技術" class="nav-tab text-sm sm:text-base px-3 py-3 sm:px-4 sm:py-4 font-medium text-gray-600">技術</button>
+                <button data-category="ビジネス" class="nav-tab text-sm sm:text-base px-3 py-3 sm:px-4 sm:py-4 font-medium text-gray-600">ビジネス</button>
+                <button data-category="学術・専門" class="nav-tab text-sm sm:text-base px-3 py-3 sm:px-4 sm:py-4 font-medium text-gray-600">学術・専門</button>
+                <button data-category="ユーザー" class="nav-tab text-sm sm:text-base px-3 py-3 sm:px-4 sm:py-4 font-medium text-gray-600">ユーザー</button>
+                <button data-category="ユニーク" class="nav-tab text-sm sm:text-base px-3 py-3 sm:px-4 sm:py-4 font-medium text-gray-600">ユニーク</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+        <!-- Section 1: 概要ダッシュボード -->
+        <section id="dashboard" class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">アイデア概要ダッシュボード</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">
+                ここでは、登録されている全アイデアの概要を視覚的に確認できます。ドーナツチャートは、各専門分野からどれくらいのアイデアが出ているかを示しています。チャートの各部分をクリックすると、下の「アイデア探索」セクションがその分野のアイデアだけに絞り込まれます。
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4 text-center">専門分野別アイデア分布</h3>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg flex flex-col justify-center space-y-6">
+                    <div>
+                        <span class="text-sm font-medium text-green-700">総アイデア数</span>
+                        <p id="total-ideas" class="text-4xl font-bold text-gray-900">0</p>
+                    </div>
+                    <div>
+                        <span class="text-sm font-medium text-green-700">平均難易度 (5段階)</span>
+                        <div id="average-difficulty" class="text-3xl font-bold text-gray-900 flex items-center">
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-sm font-medium text-green-700">主な必要スキル</span>
+                        <div id="top-skills" class="flex flex-wrap gap-2 mt-2">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: アイデア探索 -->
+        <section id="explorer" class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">アイデア探索グリッド</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">
+                ここでは、具体的な副業アイデアをカード形式で閲覧できます。上のナビゲーションタブやダッシュボードのチャートを使って、興味のある分野に絞り込むことができます。気になるアイデアカードをクリックすると、下の「視点別クロス分析」セクションで詳細な専門家コメントが読めます。
+            </p>
+            <div id="idea-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+            <p id="no-ideas-message" class="text-center text-gray-500 py-12 hidden">該当するアイデアはありません。</p>
+        </section>
+
+        <!-- Section 3: 視点別クロス分析 -->
+        <section id="analysis" class="sticky bottom-0">
+            <div id="analysis-content" class="bg-white p-6 sm:p-8 rounded-t-xl shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] transition-all duration-300 max-h-[80vh] overflow-y-auto hidden">
+                <button id="close-analysis" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">視点別クロス分析</h2>
+                <h3 id="analysis-title" class="text-xl font-semibold text-green-700 mb-4"></h3>
+                <p class="text-gray-600 mb-6">このアイデア（<span id="analysis-title-inline" class="font-bold"></span>）について、各分野の専門家がどのように考えているかを見てみましょう。異なる視点からのメリット、潜在的なリスク、実行のヒントがまとめられています。</p>
+                
+                <div class="border-b border-gray-200 mb-4">
+                    <nav id="analysis-tabs" class="-mb-px flex flex-wrap gap-x-4" aria-label="Tabs">
+                    </nav>
+                </div>
+                
+                <div id="analysis-details">
+                </div>
+            </div>
+            <div id="analysis-placeholder" class="bg-white p-6 rounded-t-xl shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] text-center text-gray-500">
+                ↑ 上のカードをクリックすると、ここに専門家の詳細コメントが表示されます。
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const allIdeas = [
+                {
+                    id: 1,
+                    title: "カスタムイラスト販売",
+                    category: "クリエイティブ",
+                    difficulty: 3,
+                    skills: ["イラスト", "SNS", "デザイン"],
+                    description: "SNSアイコンやヘッダー、個人利用のイラストをオーダーメイドで制作・販売する。",
+                    expertComments: {
+                        "クリエイティブ": "独自の世界観と画力が鍵。ポートフォリオを充実させ、SNSでファンを増やすことが収益に直結する。単価設定は慎重に。",
+                        "ビジネス": "リピーター獲得が重要。アイコンとヘッダーのセット販売や、商用利用オプションで単価アップを図る。プラットフォーム（Coconala, SKIMAなど）の手数料も考慮すること。",
+                        "技術": "高解像度データの納品プロセスや、簡単な修正依頼に対応できる体制を整えると良い。Webポートフォリオサイトがあると信頼性が増す。",
+                        "ユーザー": "好きな絵柄の作家に直接依頼できるのは嬉しい。納期とクオリティが明確だと安心。",
+                    }
+                },
+                {
+                    id: 2,
+                    title: "ブログ記事執筆代行",
+                    category: "クリエイティブ",
+                    difficulty: 2,
+                    skills: ["ライティング", "SEO", "リサーチ"],
+                    description: "企業や個人のオウンドメディア向けに、指定されたテーマでブログ記事を執筆する。",
+                    expertComments: {
+                        "クリエイティブ": "クライアントの要求するトーン＆マナーを正確に再現する能力が必要。SEOの基礎知識があると単価交渉しやすい。",
+                        "ビジネス": "文字単価（例：1円〜3円）での契約が一般的。実績を積み、得意分野（例：金融、美容）を作ると高単価案件につながる。クラウドソーシングサイトが最初の窓口として手軽。",
+                        "学術・専門": "自身の専門分野に関する記事であれば、高い専門性と権威性を付加価値として提供でき、高単価が期待できる。",
+                    }
+                },
+                {
+                    id: 3,
+                    title: "GAS自動化ツール作成",
+                    category: "技術",
+                    difficulty: 3,
+                    skills: ["プログラミング", "GAS", "業務改善"],
+                    description: "GoogleスプレッドシートやGmailなどを連携させ、手作業で行っている定型業務を自動化する小規模ツールを作成する。",
+                    expertComments: {
+                        "技術": "JavaScriptの基礎知識があれば比較的学びやすい。具体的な「面倒ごと」を解決する提案力が求められる。一度作れば流用できるパーツも多い。",
+                        "ビジネス": "中小企業の業務改善ニーズは根強い。単発のツール作成だけでなく、月額保守契約を結べると安定収入（月5万）につながりやすい。",
+                        "ユーザー": "Excelマクロより手軽に導入できるイメージ。安価で「この作業が自動化される」と明確にわかれば依頼したい。",
+                    }
+                },
+                {
+                    id: 4,
+                    title: "WordPressサイト制作",
+                    category: "技術",
+                    difficulty: 4,
+                    skills: ["WordPress", "HTML/CSS", "デザイン"],
+                    description: "個人事業主や小規模店舗向けに、WordPressを使った基本的なWebサイト（5ページ程度）を制作する。",
+                    expertComments: {
+                        "技術": "既存テーマのカスタマイズが中心。PHPの基礎とCSSの知識は必須。サーバー・ドメイン周りの知識も求められる。",
+                        "ビジネス": "1案件で5万円以上を狙えるが、制作後の保守・運用（月額5,000円〜）をセットで提案することが、継続的な5万円達成の鍵。",
+                        "クリエイティブ": "単なる構築屋でなく、デザインテンプレートの選定や簡単なロゴ作成など、ビジュアル面もサポートできると付加価値が高い。",
+                    }
+                },
+                {
+                    id: 5,
+                    title: "ニッチ市場のせどり",
+                    category: "ビジネス",
+                    difficulty: 4,
+                    skills: ["リサーチ", "資金管理", "市場分析"],
+                    description: "特定のニッチなジャンル（例：絶版の専門書、特定のアニメグッズ）に絞り、安く仕入れて高く売る。",
+                    expertComments: {
+                        "ビジネス": "利益計算（手数料、送料、仕入れ値）が命。キャッシュフロー管理が必須。流行を追うより、自分が詳しいニッチ市場で戦うのが吉。",
+                        "ユーザー": "フリマアプリで手軽に始められるが、在庫を抱えるリスクがある。家のスペースも必要。",
+                        "ディスラプター": "あえて「売れ残りそうなもの」を仕入れ、そのストーリーごと売る「物語せどり」はどうか。",
+                    }
+                },
+                {
+                    id: 6,
+                    title: "アフィリエイトサイト運営",
+                    category: "ビジネス",
+                    difficulty: 5,
+                    skills: ["SEO", "ライティング", "マーケティング"],
+                    description: "特定のテーマ（例：〇〇キャンプ道具比較）でWebサイトを作り、商品レビューや比較記事を通じてアフィリエイト収益を得る。",
+                    expertComments: {
+                        "ビジネス": "月5万円を達成するまで平均1年〜2年はかかると言われる。収益化の仕組みが完成すれば自動化しやすいが、SEOの変動リスクが常にある。",
+                        "技術": "WordPress運営スキル、データ分析（Google Analytics）のスキルが成功率を上げる。",
+                        "クリエイティブ": "記事の質と情熱が重要。読者に信頼される独自の切り口やレビューがなければ、競合に埋もれる。",
+                    }
+                },
+                {
+                    id: 7,
+                    title: "専門分野の解説記事執筆",
+                    category: "学術・専門",
+                    difficulty: 3,
+                    skills: ["専門知識", "ライティング", "分かりやすさ"],
+                    description: "自身の専門分野（例：法律、医療、AI）について、一般向けメディアや専門メディアに解説記事を寄稿する。",
+                    expertComments: {
+                        "学術・専門": "専門知識をかみ砕いて説明するスキルが必要。自身の権威性（学位、資格、職歴）が単価に直結する。1記事1万円〜5万円も可能。",
+                        "ビジネス": "文字単価（5円〜10円）での契約が多い。メディア側からの執筆依頼を獲得するために、SNSや個人ブログでの発信が有効。",
+                    }
+                },
+                {
+                    id: 8,
+                    title: "アンケート調査設計・分析",
+                    category: "学術・専門",
+                    difficulty: 4,
+                    skills: ["統計", "リサーチ", "データ分析"],
+                    description: "企業の新商品開発や顧客満足度調査のためのアンケートを設計し、回収データを分析・レポーティングする。",
+                    expertComments: {
+                        "社会科学者": "調査目的の明確化と、適切な質問項目の設計が腕の見せ所。単純集計だけでなく、クロス集計や簡単な統計解析までできると価値が高い。",
+                        "ビジネス": "小規模な調査ニーズは多い。GoogleフォームやSurveyMonkeyなど無料ツールを使えばコストを抑えて実施可能。1案件5万円〜狙える。",
+                    }
+                },
+                {
+                    id: 9,
+                    title: "フリマアプリでの不用品販売",
+                    category: "ユーザー",
+                    difficulty: 1,
+                    skills: ["スマホ操作", "梱包"],
+                    description: "家にある不要になった服、本、家電などをフリマアプリ（メルカリなど）で販売する。",
+                    expertComments: {
+                        "ユーザー": "最も手軽に始められる副業。単発の収益にはなるが、月5万円を「継続的に」稼ぐのは難しい。家が片付くのが最大のメリット。",
+                        "ビジネス": "不用品販売から始め、売れる商品の傾向を掴んで「せどり」（ID: 5）に移行するステップアップが王道。",
+                    }
+                },
+                {
+                    id: 10,
+                    title: "スキルシェア（単発依頼）",
+                    category: "ユーザー",
+                    difficulty: 2,
+                    skills: ["得意なこと"],
+                    description: "Coconalaなどで「話し相手になります」「Excelの簡単なデータ入力します」など、自分の小さなスキルを販売する。",
+                    expertComments: {
+                        "ユーザー": "「こんなことでも売れるんだ」という発見がある。実績（評価）が貯まるまで低単価で受注する必要がある。月5万はかなり頑張りが必要。",
+                        "クリエイティブ": "「あなたのSNSに1週間毎日コメントします」など、継続的なサービスに繋げる工夫も可能。",
+                    }
+                },
+                {
+                    id: 11,
+                    title: "「何もしない」レンタル",
+                    category: "ユニーク",
+                    difficulty: 2,
+                    skills: ["傾聴力", "存在感"],
+                    description: "「ただ一緒にいてほしい」「話を聞いてほしい」というニーズに応え、文字通り「何もしない」自分を貸し出す。",
+                    expertComments: {
+                        "ディスラプター": "「労働＝対価」という常識へのアンチテーゼ。需要は確かにあるが、安全面の確保（場所の指定など）が最重要課題。",
+                        "社会科学者": "現代社会における孤独やコミュニケーションの希薄化を反映したサービス。倫理的な配慮が求められる。",
+                        "ユーモア": "プロフィールでいかに「何もしなさそう」かつ「安全そう」かを伝えるかが面白いポイント。",
+                    }
+                },
+                {
+                    id: 12,
+                    title: "週末マイクロアドベンチャーガイド",
+                    category: "ユニーク",
+                    difficulty: 4,
+                    skills: ["専門知識(地域)", "安全管理", "企画力"],
+                    description: "自分が詳しい地域の「知られざる裏山ハイキング」「秘境の湧き水カフェ巡り」など、小規模な体験ツアーを企画・ガイドする。",
+                    expertComments: {
+                        "冒険家": "体験価値のマネタイズ。メジャーな観光地でなく、個人的な「お気に入り」を共有することが付加価値になる。安全管理と保険の知識は必須。",
+                        "ビジネス": "1回5,000円×参加者4人×週末2回 = 月4万円。SNSでの集客と魅力的なコース設定が鍵。法規制（旅行業法など）の確認が必要。",
+                    }
+                }
+            ];
+
+            const categoryChartCtx = document.getElementById('categoryChart').getContext('2d');
+            let categoryChart;
+
+            const navTabs = document.getElementById('nav-tabs');
+            const ideaGrid = document.getElementById('idea-grid');
+            const noIdeasMessage = document.getElementById('no-ideas-message');
+
+            const analysisPlaceholder = document.getElementById('analysis-placeholder');
+            const analysisContent = document.getElementById('analysis-content');
+            const analysisTitle = document.getElementById('analysis-title');
+            const analysisTitleInline = document.getElementById('analysis-title-inline');
+            const analysisTabs = document.getElementById('analysis-tabs');
+            const analysisDetails = document.getElementById('analysis-details');
+            const closeAnalysisBtn = document.getElementById('close-analysis');
+            
+            let activeCategory = 'すべて';
+            let activeIdea = null;
+
+            function getDifficultyMarkup(difficulty) {
+                let dots = '';
+                for (let i = 1; i <= 5; i++) {
+                    const colorClass = i <= difficulty ? `difficulty-${i}` : 'bg-gray-200';
+                    dots += `<span class="difficulty-dot ${colorClass}"></span>`;
+                }
+                return `<div class="flex items-center" title="難易度: ${difficulty}/5">${dots}</div>`;
+            }
+
+            function getCategoryColor(category) {
+                const colors = {
+                    "クリエイティブ": "bg-pink-100 text-pink-800",
+                    "技術": "bg-blue-100 text-blue-800",
+                    "ビジネス": "bg-green-100 text-green-800",
+                    "学術・専門": "bg-purple-100 text-purple-800",
+                    "ユーザー": "bg-yellow-100 text-yellow-800",
+                    "ユニーク": "bg-indigo-100 text-indigo-800",
+                };
+                return colors[category] || "bg-gray-100 text-gray-800";
+            }
+
+            function renderIdeaCards(ideas) {
+                ideaGrid.innerHTML = '';
+                if (ideas.length === 0) {
+                    noIdeasMessage.classList.remove('hidden');
+                    return;
+                }
+                noIdeasMessage.classList.add('hidden');
+
+                ideas.forEach(idea => {
+                    const card = document.createElement('div');
+                    card.className = `idea-card bg-white p-5 rounded-lg shadow-md cursor-pointer border-2 ${activeIdea === idea.id ? 'border-green-600' : 'border-transparent'}`;
+                    card.dataset.id = idea.id;
+
+                    let skillsMarkup = idea.skills.map(skill => 
+                        `<span class="text-xs font-medium bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">${skill}</span>`
+                    ).join(' ');
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ${getCategoryColor(idea.category)}">${idea.category}</span>
+                            ${getDifficultyMarkup(idea.difficulty)}
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">${idea.title}</h3>
+                        <p class="text-sm text-gray-600 mb-4">${idea.description}</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${skillsMarkup}
+                        </div>
+                    `;
+                    card.addEventListener('click', () => selectIdea(idea.id));
+                    ideaGrid.appendChild(card);
+                });
+            }
+
+            function selectIdea(id) {
+                if (activeIdea === id) {
+                    hideAnalysis();
+                    return;
+                }
+                activeIdea = id;
+                const idea = allIdeas.find(i => i.id === id);
+                renderCrossAnalysis(idea);
+                analysisPlaceholder.classList.add('hidden');
+                analysisContent.classList.remove('hidden');
+                
+                document.querySelectorAll('.idea-card').forEach(card => {
+                    card.classList.remove('border-green-600');
+                    if (parseInt(card.dataset.id) === id) {
+                        card.classList.add('border-green-600');
+                    }
+                });
+
+                analysisContent.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+
+            function hideAnalysis() {
+                activeIdea = null;
+                analysisPlaceholder.classList.remove('hidden');
+                analysisContent.classList.add('hidden');
+                document.querySelectorAll('.idea-card').forEach(card => {
+                    card.classList.remove('border-green-600');
+                });
+            }
+
+            function renderCrossAnalysis(idea) {
+                analysisTitle.textContent = idea.title;
+                analysisTitleInline.textContent = idea.title;
+                analysisTabs.innerHTML = '';
+                analysisDetails.innerHTML = '';
+
+                const experts = Object.keys(idea.expertComments);
+                experts.forEach((expert, index) => {
+                    const tab = document.createElement('button');
+                    tab.className = `expert-comment-tab whitespace-nowrap py-2 px-4 border border-transparent text-sm font-medium rounded-t-lg text-gray-600 hover:text-gray-800 hover:bg-gray-50`;
+                    tab.dataset.expert = expert;
+                    tab.textContent = expert;
+                    
+                    const detail = document.createElement('div');
+                    detail.className = 'expert-comment-detail p-4 bg-gray-50 rounded-b-lg rounded-tr-lg';
+                    detail.dataset.expert = expert;
+                    detail.innerHTML = `<p class="text-gray-700 leading-relaxed">${idea.expertComments[expert]}</p>`;
+
+                    if (index === 0) {
+                        tab.classList.add('active');
+                    } else {
+                        detail.classList.add('hidden');
+                    }
+                    
+                    tab.addEventListener('click', () => {
+                        document.querySelectorAll('.expert-comment-tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.expert-comment-detail').forEach(d => d.classList.add('hidden'));
+                        
+                        tab.classList.add('active');
+                        document.querySelector(`.expert-comment-detail[data-expert="${expert}"]`).classList.remove('hidden');
+                    });
+
+                    analysisTabs.appendChild(tab);
+                    analysisDetails.appendChild(detail);
+                });
+            }
+
+            function filterIdeas(category) {
+                activeCategory = category;
+                
+                navTabs.querySelectorAll('.nav-tab').forEach(tab => {
+                    if (tab.dataset.category === category) {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                });
+
+                const filteredIdeas = category === 'すべて' 
+                    ? allIdeas 
+                    : allIdeas.filter(idea => idea.category === category || (category === 'ユニーク' && ['ユニーク', '冒険家', 'ディスラプター', 'ユーモア'].includes(idea.category)));
+
+                if (category === 'ユニーク') {
+                    const uniqueIdeas = allIdeas.filter(idea => ['ディスラプター', 'ユーモアのセンス持つ人々', '冒険家'].includes(idea.category));
+                    const mappedIdeas = uniqueIdeas.map(idea => ({ ...idea, category: 'ユニーク' }));
+                    renderIdeaCards(mappedIdeas);
+                } else {
+                     renderIdeaCards(filteredIdeas);
+                }
+               
+
+                if(activeIdea && (category !== 'すべて' && allIdeas.find(i => i.id === activeIdea)?.category !== category)) {
+                    hideAnalysis();
+                }
+            }
+
+            navTabs.addEventListener('click', (e) => {
+                if (e.target.matches('.nav-tab')) {
+                    filterIdeas(e.target.dataset.category);
+                }
+            });
+
+            closeAnalysisBtn.addEventListener('click', hideAnalysis);
+
+            function initDashboard() {
+                document.getElementById('total-ideas').textContent = allIdeas.length;
+
+                const totalDifficulty = allIdeas.reduce((sum, idea) => sum + idea.difficulty, 0);
+                const avgDifficulty = (totalDifficulty / allIdeas.length).toFixed(1);
+                const avgDifficultyInt = Math.round(avgDifficulty);
+                document.getElementById('average-difficulty').innerHTML = `
+                    <span class="mr-2">${avgDifficulty}</span> 
+                    ${getDifficultyMarkup(avgDifficultyInt)}
+                `;
+
+                const skillCounts = allIdeas.flatMap(idea => idea.skills).reduce((acc, skill) => {
+                    acc[skill] = (acc[skill] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                const topSkills = Object.entries(skillCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 4)
+                    .map(entry => entry[0]);
+
+                document.getElementById('top-skills').innerHTML = topSkills.map(skill => 
+                    `<span class="text-sm font-medium bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full">${skill}</span>`
+                ).join('');
+            }
+            
+            function initChart() {
+                const categoryCounts = allIdeas.reduce((acc, idea) => {
+                    let category = idea.category;
+                    if (['ディスラプター', 'ユーモアのセンス持つ人々', '冒険家'].includes(category)) {
+                        category = 'ユニーク';
+                    }
+                    if (['社会科学者'].includes(category)) {
+                        category = '学術・専門';
+                    }
+                    acc[category] = (acc[category] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const labels = Object.keys(categoryCounts);
+                const data = Object.values(categoryCounts);
+                
+                const chartColors = {
+                    "クリエイティブ": "#FBCFE8",
+                    "技術": "#BFDBFE",
+                    "ビジネス": "#A7F3D0",
+                    "学術・専門": "#E9D5FF",
+                    "ユーザー": "#FEF08A",
+                    "ユニーク": "#C7D2FE",
+                };
+                const chartBorderColors = {
+                    "クリエイティブ": "#E11D48",
+                    "技術": "#2563EB",
+                    "ビジネス": "#059669",
+                    "学術・専門": "#9333EA",
+                    "ユーザー": "#EAB308",
+                    "ユニーク": "#4F46E5",
+                };
+
+                categoryChart = new Chart(categoryChartCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'アイデア数',
+                            data: data,
+                            backgroundColor: labels.map(label => chartColors[label] || '#E5E7EB'),
+                            borderColor: labels.map(label => chartBorderColors[label] || '#9CA3AF'),
+                            borderWidth: 2,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    font: {
+                                        family: "'Noto Sans JP', 'Inter', sans-serif"
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += context.parsed + '件';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        onClick: (event, elements) => {
+                            if (elements.length > 0) {
+                                const index = elements[0].index;
+                                const category = labels[index];
+                                filterIdeas(category);
+                            }
+                        },
+                        onHover: (event, chartElement) => {
+                             event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                        }
+                    }
+                });
+            }
+
+            initDashboard();
+            initChart();
+            filterIdeas('すべて');
+        });
+    </script>
+</body>
+</html>
